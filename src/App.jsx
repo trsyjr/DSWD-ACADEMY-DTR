@@ -5,24 +5,36 @@ import Dashboard from './components/Dashboard';
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [isInitializing, setIsInitializing] = useState(true); // Added to prevent flash
 
   useEffect(() => {
+    // 1. Check if user exists in storage on mount
     const savedUser = localStorage.getItem('dtr_user');
-    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    // 2. We are done checking storage
+    setIsInitializing(false);
   }, []);
 
   const handleAuthSuccess = (userData) => {
-    setUser(userData);
     localStorage.setItem('dtr_user', JSON.stringify(userData));
+    setUser(userData);
   };
 
   const handleLogout = () => {
+    // 1. Clear State
     setUser(null);
+    // 2. Clear Storage
     localStorage.removeItem('dtr_user');
+    // 3. Force a clean URL state (optional but helps with "back button" issues)
+    window.location.hash = ''; 
   };
 
+  // While checking localStorage, show nothing or a small loader
+  if (isInitializing) return null;
+
   return (
-    // Removed background color so TABG.png can show through
     <div className="min-h-screen w-full relative overflow-x-hidden">
       <AnimatePresence mode="wait">
         {!user ? (
