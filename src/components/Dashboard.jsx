@@ -52,9 +52,17 @@ const Dashboard = ({ user, onLogout }) => {
       const result = await response.json();
       if (result.success) {
         setDtrData(result.dtr || []);
+        return true;
+      } else {
+        if (result.message === "Tab not found" || result.message === "Error opening sheet") {
+          setErrorToast("Invalid: Sheet Not Found");
+          setTimeout(() => setErrorToast(null), 3000);
+        }
+        return false;
       }
     } catch (err) {
       console.error("Fetch error:", err);
+      return false;
     } finally {
       setRefreshing(false);
     }
@@ -68,6 +76,8 @@ const Dashboard = ({ user, onLogout }) => {
 
   const handleAttendance = async (actionType) => {
     if (loading || !user?.email) return;
+    
+    // Check if user has timed in for actions other than Time In
     if (actionType !== "Time In") {
       const today = new Date();
       const todayStr = `${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getDate().toString().padStart(2, '0')}/${today.getFullYear()}`;
@@ -78,24 +88,29 @@ const Dashboard = ({ user, onLogout }) => {
         return;
       }
     }
+
     setLoading(true);
     try {
+      // Step 1: Log the DTR
       await fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ action: 'log_dtr', email: user.email, type: actionType }),
       });
-      setShowToast(actionType);
-      setTimeout(async () => {
-        await fetchDTR();
-        setLoading(false);
-        setShowToast(null);
-      }, 3000);
+
+      // Step 2: Wait for re-fetch to complete before showing success
+      const fetchSuccess = await fetchDTR();
+      
+      if (fetchSuccess) {
+        setShowToast(actionType);
+        setTimeout(() => setShowToast(null), 3000);
+      }
     } catch (err) {
       setErrorToast("Sync Failed. Check Connection.");
-      setLoading(false);
       setTimeout(() => setErrorToast(null), 3000);
+    } finally {
+      setLoading(false);
     }
   };
 
