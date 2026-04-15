@@ -15,7 +15,10 @@ const Dashboard = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [dtrData, setDtrData] = useState([]);
-  const [period, setPeriod] = useState("1st Half"); 
+  
+  // FIXED: Automatically select 1st or 2nd half based on current date
+  const [period, setPeriod] = useState(new Date().getDate() <= 15 ? "1st Half" : "2nd Half"); 
+  
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [showToast, setShowToast] = useState(null);
   const [errorToast, setErrorToast] = useState(null); 
@@ -77,7 +80,6 @@ const Dashboard = ({ user, onLogout }) => {
   const handleAttendance = async (actionType) => {
     if (loading || !user?.email) return;
     
-    // Check if user has timed in for actions other than Time In
     if (actionType !== "Time In") {
       const today = new Date();
       const todayStr = `${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getDate().toString().padStart(2, '0')}/${today.getFullYear()}`;
@@ -91,7 +93,6 @@ const Dashboard = ({ user, onLogout }) => {
 
     setLoading(true);
     try {
-      // Step 1: Log the DTR
       await fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -99,7 +100,6 @@ const Dashboard = ({ user, onLogout }) => {
         body: JSON.stringify({ action: 'log_dtr', email: user.email, type: actionType }),
       });
 
-      // Step 2: Wait for re-fetch to complete before showing success
       const fetchSuccess = await fetchDTR();
       
       if (fetchSuccess) {
