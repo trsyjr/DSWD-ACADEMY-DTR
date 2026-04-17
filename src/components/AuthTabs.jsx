@@ -6,7 +6,9 @@ import {
   MdEmail, 
   MdArrowForward, 
   MdCheckCircle, 
-  MdErrorOutline 
+  MdErrorOutline,
+  MdVisibility,
+  MdVisibilityOff 
 } from 'react-icons/md';
 
 // Ensure these paths match your folder structure
@@ -14,13 +16,13 @@ import bgImage from '../assets/TABG.png';
 import logoImage from '../assets/TALogo.png';
 
 const BRAND_COLOR = "#073763";
-// YOUR ACTUAL SCRIPT URL
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-NDXH1Mc1jilVl1kSwEkWaKfQlfqPjdz2k-5eok8EK9rW1TS1CtL1IrU3ez-H7BONWA/exec';
 
 const AuthTabs = ({ onAuthSuccess }) => {
   const [activeTab, setActiveTab] = useState('login');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleGSheetSubmit = async (e) => {
     e.preventDefault();
@@ -37,29 +39,23 @@ const AuthTabs = ({ onAuthSuccess }) => {
 
     try {
       if (activeTab === 'login') {
-        // --- SECURE LOGIN (GET) ---
-        // Fetching with GET allows us to parse the JSON response and verify the user
         const response = await fetch(
           `${SCRIPT_URL}?action=login&username=${encodeURIComponent(payload.username)}&password=${encodeURIComponent(payload.password)}`
         );
         const result = await response.json();
 
         if (result.success) {
-          // Success: Pass the REAL data from the spreadsheet to the App state
           onAuthSuccess({
             username: result.user.username,
             email: result.user.email 
           });
         } else {
-          // Fail: Spreadsheet found no match
           setMessage({ 
             type: 'error', 
             text: result.message || "Invalid Username or Password" 
           });
         }
       } else {
-        // --- REGISTRATION (POST) ---
-        // Registration uses POST with no-cors as we just need to send the data
         await fetch(SCRIPT_URL, {
           method: 'POST',
           mode: 'no-cors',
@@ -85,13 +81,11 @@ const AuthTabs = ({ onAuthSuccess }) => {
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4 md:p-10">
       
-      {/* Background Layer */}
       <div 
         className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-105"
         style={{ backgroundImage: `url(${bgImage})` }} 
       />
 
-      {/* Main Glassmorphism Container */}
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -115,7 +109,6 @@ const AuthTabs = ({ onAuthSuccess }) => {
           </p>
         </div>
 
-        {/* Tab Switcher */}
         <div className="w-full flex bg-slate-100 p-1.5 rounded-2xl mb-8 border border-slate-200 shadow-inner">
           {['login', 'register'].map((tab) => (
             <button
@@ -133,10 +126,8 @@ const AuthTabs = ({ onAuthSuccess }) => {
           ))}
         </div>
 
-        {/* Auth Form */}
         <form onSubmit={handleGSheetSubmit} className="w-full space-y-5">
           
-          {/* Username Input */}
           <div className="space-y-1.5 group">
             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Username</label>
             <div className="relative">
@@ -151,7 +142,6 @@ const AuthTabs = ({ onAuthSuccess }) => {
             </div>
           </div>
 
-          {/* Registration Fields (Conditional) */}
           <AnimatePresence mode="wait">
             {activeTab === 'register' && (
               <motion.div 
@@ -176,22 +166,42 @@ const AuthTabs = ({ onAuthSuccess }) => {
             )}
           </AnimatePresence>
 
-          {/* Password Input */}
           <div className="space-y-1.5 group">
             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
             <div className="relative">
               <MdLock className="absolute left-4 top-1/2 -translate-y-1/2 text-xl text-slate-300 group-focus-within:text-[#073763] transition-colors" />
               <input 
                 name="password"
-                type="password" 
+                type={showPassword ? "text" : "password"} 
                 required
                 placeholder="••••••••"
-                className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-[#073763] focus:ring-4 focus:ring-[#073763]/5 outline-none text-slate-700 font-semibold transition-all"
+                className="w-full pl-12 pr-14 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-[#073763] focus:ring-4 focus:ring-[#073763]/5 outline-none text-slate-700 font-semibold transition-all"
               />
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.85 }}
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-xl text-slate-400 hover:text-[#073763] transition-colors focus:outline-none flex items-center justify-center"
+              >
+                <AnimatePresence initial={false}>
+                  <motion.div
+                    key={showPassword ? 'eye-off' : 'eye-on'}
+                    initial={{ scale: 0.4, opacity: 0, position: "absolute" }}
+                    animate={{ scale: 1, opacity: 1, position: "relative" }}
+                    exit={{ scale: 0.4, opacity: 0, position: "absolute" }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 1200, // Extremely fast
+                      damping: 40, 
+                    }}
+                  >
+                    {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
+                  </motion.div>
+                </AnimatePresence>
+              </motion.button>
             </div>
           </div>
 
-          {/* Submit Button */}
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
@@ -213,7 +223,6 @@ const AuthTabs = ({ onAuthSuccess }) => {
           </motion.button>
         </form>
 
-        {/* Status Messages */}
         <AnimatePresence>
           {message.text && (
             <motion.div 
