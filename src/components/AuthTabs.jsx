@@ -11,7 +11,6 @@ import {
   MdVisibilityOff 
 } from 'react-icons/md';
 
-// Ensure these paths match your folder structure
 import bgImage from '../assets/TABG.png';
 import logoImage from '../assets/TALogo.png';
 
@@ -191,7 +190,7 @@ const AuthTabs = ({ onAuthSuccess }) => {
                     exit={{ scale: 0.4, opacity: 0, position: "absolute" }}
                     transition={{ 
                       type: "spring", 
-                      stiffness: 1200, // Extremely fast
+                      stiffness: 1200,
                       damping: 40, 
                     }}
                   >
