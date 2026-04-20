@@ -16,7 +16,6 @@ const Dashboard = ({ user, onLogout }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [dtrData, setDtrData] = useState([]);
   
-  // FIXED: Automatically select 1st or 2nd half based on current date
   const [period, setPeriod] = useState(new Date().getDate() <= 15 ? "1st Half" : "2nd Half"); 
   
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
